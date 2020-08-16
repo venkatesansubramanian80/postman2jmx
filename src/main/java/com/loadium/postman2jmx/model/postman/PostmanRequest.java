@@ -24,6 +24,9 @@ public class PostmanRequest {
     @JsonProperty("description")
     private String description;
 
+    @JsonProperty("auth")
+    private PostmanAuth auth;
+
     public PostmanRequest() {
     }
 
@@ -68,5 +71,12 @@ public class PostmanRequest {
     }
 
 
+    public PostmanAuth getAuth() {
+        return auth;
+    }
+
+    public void setAuth(PostmanAuth auth) {
+        this.auth = auth;
+    }
 }
 

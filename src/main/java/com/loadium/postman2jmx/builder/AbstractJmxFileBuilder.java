@@ -4,19 +4,24 @@ import com.loadium.postman2jmx.config.Postman2JmxConfig;
 import com.loadium.postman2jmx.exception.NoPostmanCollectionItemException;
 import com.loadium.postman2jmx.exception.NullPostmanCollectionException;
 import com.loadium.postman2jmx.model.jmx.*;
+import com.loadium.postman2jmx.model.postman.PostmanAuth;
 import com.loadium.postman2jmx.model.postman.PostmanCollection;
 import com.loadium.postman2jmx.model.postman.PostmanItem;
 import org.apache.jmeter.config.Argument;
 import org.apache.jmeter.config.Arguments;
 import org.apache.jmeter.control.LoopController;
 import org.apache.jmeter.extractor.json.jsonpath.JSONPostProcessor;
+import org.apache.jmeter.protocol.http.control.Authorization;
 import org.apache.jmeter.protocol.http.control.HeaderManager;
 import org.apache.jmeter.protocol.http.sampler.HTTPSamplerProxy;
 import org.apache.jmeter.save.SaveService;
+import org.apache.jmeter.testelement.TestElement;
 import org.apache.jmeter.testelement.TestPlan;
 import org.apache.jmeter.threads.ThreadGroup;
 import org.apache.jorphan.collections.HashTree;
 import org.apache.jorphan.collections.ListedHashTree;
+import org.apache.jmeter.protocol.http.control.AuthManager;
+import org.apache.jmeter.protocol.http.gui.AuthPanel;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -93,6 +98,25 @@ public abstract class AbstractJmxFileBuilder implements IJmxFileBuilder {
             headerHashTree = httpSamplerHashTree.add(headerManager);
 
             PostmanItem postmanItem = postmanCollection.getItems().get(i);
+            PostmanAuth postmanAuth = postmanItem.getRequest().getAuth();
+            if(postmanAuth != null) {
+                AuthManager aManager = new AuthManager();
+                Authorization az = new Authorization();
+
+                String userName = postmanAuth.getBasic().get(0).getValue();
+                String passWord = postmanAuth.getBasic().get(1).getValue();
+
+                az.setUser(userName);
+                az.setPass(passWord);
+
+                aManager.setName("HTTP Authorization Manager");
+                aManager.setProperty(TestElement.TEST_CLASS, AuthManager.class.getName());
+                aManager.setProperty(TestElement.GUI_CLASS, AuthPanel.class.getName());
+                aManager.setEnabled(true);
+                aManager.addAuth(az);
+                httpSamplerHashTree.add(aManager);
+            }
+
             if (!postmanItem.getEvents().isEmpty()) {
                 List<JSONPostProcessor> jsonPostProcessors = JmxJsonPostProcessor.getJsonPostProcessors(postmanItem);
                 httpSamplerHashTree.add(jsonPostProcessors);
